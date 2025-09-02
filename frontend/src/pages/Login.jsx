@@ -1,86 +1,3 @@
-
-
-// import React, { useState } from 'react';
-// import axios from 'axios';
-// import { useDispatch } from 'react-redux';
-// import { authActions } from '../store/slices/authSlice';
-// import { useNavigate } from 'react-router-dom';
-
-// const Login = () => {
-//   const navigate = useNavigate(); // Use useNavigate hook
-//   const [Inputs, setInputs] = useState({ email: "", password: "" });
-//   const dispatch = useDispatch();
-
-//   const change = (e) => {
-//     const { name, value } = e.target;
-//     setInputs({ ...Inputs, [name]: value });
-//   };
-
-//   const submit = async (e) => {
-//     e.preventDefault();
-
-//     try {
-//       const response = await axios.post("http://localhost:5555/api/auth/login", Inputs);
-//       const token = response.data.token;
-//       const user = response.data.user;
-
-//       localStorage.setItem("token", token);
-//       dispatch(authActions.login({ user: user }));
-
-//       // Redirect to the home page after successful login
-//       navigate('/home');
-//     } catch (error) {
-//       console.error('Error logging in:', error);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-custom-bg bg-cover bg-center flex justify-center items-center"> {/* Apply background image */}
-//       <div className="max-w-md w-full p-8 bg-blue-200 shadow-md rounded-md">
-//         <h2 className="text-2xl font-bold text-center mb-6">Sign In</h2>
-//         <form>
-//           <div className="mb-4">
-//             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-//               Email
-//             </label>
-//             <input
-//               name="email"
-//               onChange={change}
-//               value={Inputs.email}
-//               type="email"
-//               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-//               id="email"
-//               placeholder="Enter your email"
-//             />
-//           </div>
-
-//           <div className="mb-4">
-//             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-//               Password
-//             </label>
-//             <input
-//               name="password"
-//               value={Inputs.password}
-//               onChange={change}
-//               type="password"
-//               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-//               id="password"
-//               placeholder="Enter your password"
-//             />
-//           </div>
-
-//           <button onClick={submit} type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">
-//             Sign In
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Login;
-
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
@@ -90,16 +7,21 @@ import { useNavigate } from 'react-router-dom';
 const Login = () => {
   const navigate = useNavigate();
   const [inputs, setInputs] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
 
   const change = (e) => {
     const { name, value } = e.target;
     setInputs({ ...inputs, [name]: value });
+    if (error) setError("");
   };
 
   const submit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       const response = await axios.post(`${apiUrl}/api/auth/login`, inputs);
@@ -113,16 +35,31 @@ const Login = () => {
       navigate('/home');
     } catch (error) {
       console.error('Error logging in:', error);
+      setError(error.response?.data?.message || "Failed to login. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-custom-bg bg-cover bg-center flex justify-center items-center">
-      <div className="max-w-md w-full p-8 bg-blue-200 shadow-md rounded-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Sign In</h2>
-        <form>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+    <div className="auth-container bg-custom-bg">
+      <div className="auth-card">
+        <div className="codosphere-brand">
+          <h1 className="codosphere-logo">Codosphere</h1>
+          <p className="codosphere-tagline">Connect, Code, Collaborate</p>
+        </div>
+        
+        <h2 className="auth-title">Sign In</h2>
+        
+        {error && (
+          <div className="mb-4 p-3 rounded bg-red-50 border border-red-100 text-red-600 text-sm">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={submit}>
+          <div className="form-group">
+            <label htmlFor="email" className="auth-label">
               Email
             </label>
             <input
@@ -130,14 +67,16 @@ const Login = () => {
               onChange={change}
               value={inputs.email}
               type="email"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="auth-input"
               id="email"
               placeholder="Enter your email"
+              required
             />
+            <div className="focus-border"></div>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <div className="form-group">
+            <label htmlFor="password" className="auth-label">
               Password
             </label>
             <input
@@ -145,25 +84,58 @@ const Login = () => {
               value={inputs.password}
               onChange={change}
               type="password"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="auth-input"
               id="password"
               placeholder="Enter your password"
+              required
             />
+            <div className="focus-border"></div>
+          </div>
+          
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                Remember me
+              </label>
+            </div>
+            <a href="#" className="text-sm text-indigo-600 hover:text-indigo-500">
+              Forgot password?
+            </a>
           </div>
 
-          <button onClick={submit} type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">
-            Sign In
+          <button 
+            type="submit" 
+            className="auth-button"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Signing in...
+              </span>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
 
-        <div className="text-center mt-4">
+        <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
             Not registered? 
             <button 
               onClick={() => navigate("/")} 
-              className="text-blue-500 hover:underline ml-1"
+              className="auth-link ml-1"
             >
-              Sign Up
+              Create an account
             </button>
           </p>
         </div>
@@ -173,4 +145,3 @@ const Login = () => {
 };
 
 export default Login;
-

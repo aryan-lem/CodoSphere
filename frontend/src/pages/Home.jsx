@@ -22,7 +22,7 @@ const Home = () => {
                     const url = `${apiUrl}/api/post/${fid}/posts`;
                     const response = await axios.get(url, {
                         headers: {
-                            Authorization: `Bearer ${token}` // Attach JWT token to the request
+                            Authorization: `Bearer ${token}`
                         }
                     });
                     allPosts = allPosts.concat(response.data);
@@ -43,26 +43,33 @@ const Home = () => {
     }, [user, token]);
 
     return (
-        <div className="bg-custom-bg bg-cover bg-center bg-fixed min-h-screen overflow-hidden">
+        <div className="bg-gradient-to-b from-blue-100 to-slate-50 min-h-screen bg-custom-bg overflow-x-hidden">
             {!user && (
                 <div className="flex items-center justify-center min-h-screen">
-                    <ClipLoader color="#00008B" loading={loading} size={100} />
+                    <ClipLoader color="#3b82f6" loading={loading} size={100} />
                 </div>
             )}
-            {user && <h1 className="text-center text-2xl my-4 text-white font-bold">Welcome {user.firstName} {user.lastName}</h1>}
+            {user && <h1 className="text-center text-2xl my-4 text-slate-800 font-bold">Welcome {user.firstName} {user.lastName}</h1>}
             <CreatePostForm />
             <div>
                 {/* Render posts */}
                 {loading ? (
                     <div className="flex items-center justify-center min-h-screen">
-                        <ClipLoader color="#00008B" loading={loading} size={100} />
+                        <ClipLoader color="#3b82f6" loading={loading} size={100} />
                     </div>
-                ) : (
+                ) : posts.length > 0 ? (
                     posts.map(post => (
-                        <div key={post.id}>
+                        <div key={post._id || post.id}>
                             <Post post={post} />
                         </div>
                     ))
+                ) : (
+                    <div className="flex items-center justify-center p-8">
+                        <div className="bg-white p-6 rounded-lg shadow-md border border-blue-200 text-center">
+                            <h3 className="text-lg font-medium text-slate-800 mb-2">No posts yet</h3>
+                            <p className="text-slate-600">Connect with more users to see their posts here.</p>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>

@@ -7,11 +7,22 @@ const Signup = () => {
   const [inputs, setInputs] = useState({ firstName: "", lastName: "", password: "", confirmPassword: "", email: "" });
   const [errorMessage, setErrorMessage] = useState("");
   const [emptyFields, setEmptyFields] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
 
   const change = (e) => {
     const { name, value } = e.target;
     setInputs({ ...inputs, [name]: value });
+    
+    // Clear field from empty fields list when typing
+    if (emptyFields.includes(name)) {
+      setEmptyFields(emptyFields.filter(field => field !== name));
+    }
+    
+    // Clear error message when typing
+    if (errorMessage) {
+      setErrorMessage("");
+    }
   };
 
   const submit = async (e) => {
@@ -31,7 +42,7 @@ const Signup = () => {
     // Highlight empty fields and show alert
     if (emptyFieldsArray.length > 0) {
       setEmptyFields(emptyFieldsArray);
-      alert("Please fill in all the details.");
+      setErrorMessage("Please fill in all required fields");
       return;
     }
 
@@ -41,6 +52,7 @@ const Signup = () => {
       return;
     }
 
+    setIsLoading(true);
     try {
       await axios.post(`${apiUrl}/api/auth/register`, {
         firstName: inputs.firstName,
@@ -50,48 +62,66 @@ const Signup = () => {
       });
       navigate("/login");
     } catch (error) {
-      console.log("Status is --> ", error.response.status);
-      alert(error.response.data.message);
+      console.error('Error registering:', error);
+      setErrorMessage(error.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-blue-100 bg-custom-bg bg-cover bg-center bg-fixed overflow-hidden">
-      <div className="max-w-md w-full p-8 bg-blue-200 shadow-md rounded-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Sign Up</h2>
+    <div className="auth-container bg-custom-bg">
+      <div className="auth-card">
+        <div className="codosphere-brand">
+          <h1 className="codosphere-logo">Codosphere</h1>
+          <p className="codosphere-tagline">Your coding community awaits</p>
+        </div>
+        
+        <h2 className="auth-title">Create an Account</h2>
+        
+        {errorMessage && (
+          <div className="mb-4 p-3 rounded bg-red-50 border border-red-100 text-red-600 text-sm">
+            {errorMessage}
+          </div>
+        )}
+        
         <form onSubmit={submit}>
-          <div className="mb-4">
-            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-              First Name
-            </label>
-            <input
-              type="text"
-              name="firstName"
-              onChange={change}
-              value={inputs.firstName}
-              className={`mt-1 block w-full rounded-md border ${emptyFields.includes('firstName') ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50`}
-              id="firstName"
-              placeholder="Enter your first name"
-            />
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="form-group">
+              <label htmlFor="firstName" className="auth-label">
+                First Name
+              </label>
+              <input
+                type="text"
+                name="firstName"
+                onChange={change}
+                value={inputs.firstName}
+                className={`auth-input ${emptyFields.includes('firstName') ? 'error' : ''}`}
+                id="firstName"
+                placeholder="Enter your first name"
+              />
+              <div className="focus-border"></div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="lastName" className="auth-label">
+                Last Name
+              </label>
+              <input
+                type="text"
+                name="lastName"
+                onChange={change}
+                value={inputs.lastName}
+                className={`auth-input ${emptyFields.includes('lastName') ? 'error' : ''}`}
+                id="lastName"
+                placeholder="Enter your last name"
+              />
+              <div className="focus-border"></div>
+            </div>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-              Last Name
-            </label>
-            <input
-              type="text"
-              name="lastName"
-              onChange={change}
-              value={inputs.lastName}
-              className={`mt-1 block w-full rounded-md border ${emptyFields.includes('lastName') ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50`}
-              id="lastName"
-              placeholder="Enter your last name"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <div className="form-group">
+            <label htmlFor="email" className="auth-label">
               Email
             </label>
             <input
@@ -99,14 +129,15 @@ const Signup = () => {
               name="email"
               onChange={change}
               value={inputs.email}
-              className={`mt-1 block w-full rounded-md border ${emptyFields.includes('email') ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50`}
+              className={`auth-input ${emptyFields.includes('email') ? 'error' : ''}`}
               id="email"
               placeholder="Enter your email"
             />
+            <div className="focus-border"></div>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <div className="form-group">
+            <label htmlFor="password" className="auth-label">
               Password
             </label>
             <input
@@ -114,14 +145,15 @@ const Signup = () => {
               name="password"
               value={inputs.password}
               onChange={change}
-              className={`mt-1 block w-full rounded-md border ${emptyFields.includes('password') ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50`}
+              className={`auth-input ${emptyFields.includes('password') ? 'error' : ''}`}
               id="password"
-              placeholder="Enter your password"
+              placeholder="Create a strong password"
             />
+            <div className="focus-border"></div>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+          <div className="form-group mb-6">
+            <label htmlFor="confirmPassword" className="auth-label">
               Confirm Password
             </label>
             <input
@@ -129,31 +161,42 @@ const Signup = () => {
               name="confirmPassword"
               value={inputs.confirmPassword}
               onChange={change}
-              className={`mt-1 block w-full rounded-md border ${emptyFields.includes('confirmPassword') ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50`}
+              className={`auth-input ${emptyFields.includes('confirmPassword') ? 'error' : ''}`}
               id="confirmPassword"
               placeholder="Confirm your password"
             />
+            <div className="focus-border"></div>
           </div>
 
-          {errorMessage && (
-            <div className="mb-4 text-red-500 text-sm">
-              {errorMessage}
-            </div>
-          )}
+          
 
-          <button type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">
-            Sign Up
+          <button 
+            type="submit" 
+            className="auth-button"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating Account...
+              </span>
+            ) : (
+              'Create Account'
+            )}
           </button>
         </form>
 
-        <div className="text-center mt-4">
+        <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
-            Already registered? 
+            Already have an account? 
             <button 
               onClick={() => navigate("/login")} 
-              className="text-blue-500 hover:underline ml-1"
+              className="auth-link ml-1"
             >
-              Login
+              Sign In
             </button>
           </p>
         </div>
@@ -163,4 +206,3 @@ const Signup = () => {
 };
 
 export default Signup;
-
